@@ -9,7 +9,7 @@ HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 8080))
 URL = f'http://{HOST}:{PORT}/client'
 
-times = [3, 3, 3, 3, 3, 3, 3, 3, 3, 10]
+times = [10, 10, 10, 10, 10, 10, 10, 10, 10, 30]
 res = ['ack', 'ack', 'ack', 'ack', 'ack',
        'ack', 'ack', 'ack', 'ack', 'rej']
 

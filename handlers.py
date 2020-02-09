@@ -23,7 +23,7 @@ def apply_distribution(app):
         send(app, uuid, task)
 
 
-TIMEOUT = 5
+TIMEOUT = 15
 
 
 async def timeout(app, task_uuid: str):

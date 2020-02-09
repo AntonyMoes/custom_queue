@@ -11,7 +11,7 @@ URL = f'http://{HOST}:{PORT}/generator'
 
 # SLEEP = 3
 IDS = [1, 2, 3]
-SLEEPS = [2.8, 3.0, 3.2]
+SLEEPS = [9, 10, 11]
 
 
 async def generator(id):
