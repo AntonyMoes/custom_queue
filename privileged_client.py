@@ -47,7 +47,7 @@ async def main():
                         'query': q_id
                     }
                     await ws.send_json(data)
-                    print('task list requested again')
+                    print('task list requested again cause error')
 
                 if data['type'] == 'task':
                     print('got task')
@@ -75,7 +75,7 @@ async def main():
                             'query': q_id
                         }
                         await ws.send_json(data)
-                        print('task list requested again')
+                        print('task list requested again cause empty')
                         continue
 
                     task = choice(tasks)
