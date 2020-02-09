@@ -7,6 +7,7 @@ from models import Task, Client, QueueStats
 from distribution import distribute, distribute1
 from utils import log, add_stats
 from pprint import pprint
+from logging import info, warning
 
 
 def mock_distribute(app, client):
@@ -39,7 +40,7 @@ async def timeout(app, task_uuid: str):
             app['queues'][task.id].insert(0, task)
             app['clients'][task.assignee].task = None
 
-            print(f'TIMEOUT FOR TASK {task_uuid}')
+            warning(f'TIMEOUT FOR TASK {task_uuid}')
 
             log(app)
 
@@ -60,7 +61,7 @@ def send(app, client_uuid: str, task: Task):
                 'type': 'task',
                 'payload': task.payload
             })
-            print('sent')
+            info(f'task {task.uuid} sent to {client.uuid}')
             asyncio.get_running_loop().create_task(timeout(app, task.uuid))
 
         except BaseException as e:
@@ -90,7 +91,6 @@ async def generator_handle(request) -> WebSocketResponse:
 
             log(app)
 
-            # todo: add distribution
             apply_distribution(app)
             # to_send = distribute(app['clients'], app['queues'])
 
