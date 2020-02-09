@@ -1,6 +1,6 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from models import Task, Client
 
 
-async def distribute(clients: Dict[str, Client], queues: Dict[int, List[Task]]):
+def distribute(clients: Dict[str, Client], queues: Dict[int, List[Task]]) -> List[Tuple[str, str]]:
     pass

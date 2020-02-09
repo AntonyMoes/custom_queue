@@ -9,7 +9,7 @@ class Task:
     id: int
     time: float
     payload: str
-    assignee: int = None
+    assignee: str = None
 
 
 @dataclass
