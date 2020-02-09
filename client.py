@@ -1,6 +1,7 @@
 import asyncio
 import os
 import aiohttp
+from time import sleep
 from random import choice
 from aiohttp import WSMsgType, WSMessage
 
@@ -56,4 +57,5 @@ async def main():
     await asyncio.gather(*coros)
 
 if __name__ == '__main__':
+    sleep(7)
     asyncio.get_event_loop().run_until_complete(main())
