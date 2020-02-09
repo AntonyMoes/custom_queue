@@ -19,4 +19,4 @@ class Client:
     subs: List[int]
     last_task_time: float
     ready: bool = True
-    priveleged: bool = False
+    privileged: bool = False
