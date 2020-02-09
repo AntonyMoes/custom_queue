@@ -53,7 +53,7 @@ async def client(subs):
 
 
 async def main():
-    coros = [client(choice(POSSIBLE_SUBS)) for _ in range(12)]
+    coros = [client(choice(POSSIBLE_SUBS)) for _ in range(130)]
     await asyncio.gather(*coros)
 
 if __name__ == '__main__':

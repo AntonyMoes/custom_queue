@@ -27,7 +27,7 @@ async def generator(id):
 
 
 async def main():
-    coros = [generator(choice(IDS)) for _ in range(10)]
+    coros = [generator(choice(IDS)) for _ in range(100)]
     await asyncio.gather(*coros)
 
 
