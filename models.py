@@ -8,6 +8,7 @@ class Task:
     uuid: str
     id: int
     time: float
+    started_processing: float
     payload: str
     assignee: str = None
 

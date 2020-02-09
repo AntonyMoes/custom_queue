@@ -7,4 +7,5 @@ chardet==3.0.4
 idna==2.8
 multidict==4.7.4
 pamqp==2.3.0
+pprint==0.1
 yarl==1.4.2
