@@ -20,3 +20,10 @@ class Client:
     last_task_time: float
     ready: bool = True
     privileged: bool = False
+
+
+@dataclass
+class MetaQueues:
+    id: int
+    size: int
+    task: List[Task]
