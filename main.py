@@ -1,5 +1,5 @@
 from aiohttp import web
-from handlers import generator_handle
+from handlers import generator_handle, client_handle
 
 
 def main():
@@ -7,6 +7,7 @@ def main():
 
     routes = [
         ('GET', '/generator', generator_handle, 'generator_handle'),
+        ('GET', '/client', client_handle, 'client_handle'),
     ]
 
     for method, route, handler, name in routes:

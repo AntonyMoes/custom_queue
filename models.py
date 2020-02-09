@@ -18,5 +18,5 @@ class Client:
     ws: WebSocketResponse
     subs: List[int]
     last_task_time: float
-    ready: bool = True
     privileged: bool = False
+    task: Task = None
