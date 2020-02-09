@@ -217,8 +217,16 @@ async def stat_handle(request):
     app = request.app
 
     stats = {
-        'queues': [s.__dict__ for s in app['stats']['queues'].values()],
+        'queues': {s_id: s.__dict__ for s_id, s in app['stats']['queues'].items()},
         'num_clients': len(app['clients']),
         'num_working_clients': len([c for c in app['clients'].values() if c.task is not None])
     }
+    pprint(stats)
+    for q_id, queue in app['queues'].items():
+        q_stats = stats['queues'].get(q_id)
+        if q_stats is not None:
+            q_stats['len'] = len(queue)
+
+    stats['queues'] = list(stats['queues'].values())
+
     return json_response(stats)
