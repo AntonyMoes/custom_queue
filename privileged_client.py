@@ -76,6 +76,7 @@ async def main():
                         }
                         await ws.send_json(data)
                         print('task list requested again')
+                        continue
 
                     task = choice(tasks)
                     resp = {
