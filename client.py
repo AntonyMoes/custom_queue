@@ -8,8 +8,8 @@ HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 8080))
 URL = f'http://{HOST}:{PORT}/client'
 
-
-res = ['ack', 'ack', 'rej']
+times = [3, 3, 3, 10]
+res = ['ack', 'ack', 'ack', 'rej']
 
 async def main():
     session = aiohttp.ClientSession()
@@ -27,7 +27,7 @@ async def main():
             msg: WSMessage
             if msg.type == WSMsgType.TEXT:
                 print('got task')
-                await asyncio.sleep(3)
+                await asyncio.sleep(choice(times))
                 data = {
                     'type': choice(res)
                 }

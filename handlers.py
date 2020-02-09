@@ -15,6 +15,26 @@ def mock_distribute(app, client):
         send(app, client.uuid, task)
 
 
+TIMEOUT = 5
+
+
+async def timeout(app, task_uuid: str):
+    await asyncio.sleep(TIMEOUT)
+    if task_uuid in app['pending']:
+        task = app['pending'][task_uuid]
+
+        # in case task was reassigned
+        if time() - task.started_processing >= TIMEOUT - 0.1:
+            task.started_processing = None
+            del app['pending'][task_uuid]
+            app['queues'][task.id].insert(0, task)
+            app['clients'][task.assignee].task = None
+
+            print(f'TIMEOUT FOR TASK {task_uuid}')
+
+            log(app)
+
+
 def send(app, client_uuid: str, task: Task):
     client: Client = app['clients'][client_uuid]
     # TODO: add client validity checks
@@ -23,9 +43,12 @@ def send(app, client_uuid: str, task: Task):
     app['pending'][task.uuid] = task
     client.task = task.uuid
 
-    async def helper(client: Client, Task: task):
+    async def helper(client: Client, task: Task):
         try:
             await client.ws.send_json({'payload': task.payload})
+            task.started_processing = time()
+            asyncio.get_running_loop().create_task(timeout(app, task.uuid))
+
         except BaseException as e:
             # TODO: handle
             pass
@@ -42,7 +65,7 @@ async def generator_handle(request) -> WebSocketResponse:
         msg: WSMessage
         if msg.type == WSMsgType.TEXT:
             data = msg.json()
-            task = Task(**data, time=time(), uuid=str(uuid1()))
+            task = Task(**data, time=time(), uuid=str(uuid1()), started_processing=None)
             print(task)
 
             if task.id not in app['queues']:
@@ -92,21 +115,22 @@ async def client_handle(request) -> WebSocketResponse:
 
             elif data['type'] == 'ack':
                 task_uuid = client.task
-                del app['pending'][task_uuid]
-                client.task = None
+                if task_uuid is not None:
+                    del app['pending'][task_uuid]
+                    client.task = None
 
-                #TODO: distribute
+                # TODO: distribute
                 mock_distribute(app, client)
 
                 log(app)
 
             elif data['type'] == 'rej':
                 task_uuid = client.task
-                task = app['pending'][task_uuid]
-                del app['pending'][task_uuid]
-                app['queues'][task.id].insert(0, task)
-
-                client.task = None
+                if task_uuid is not None:
+                    task = app['pending'][task_uuid]
+                    del app['pending'][task_uuid]
+                    app['queues'][task.id].insert(0, task)
+                    client.task = None
 
                 log(app)
 
