@@ -18,12 +18,5 @@ class Client:
     ws: WebSocketResponse
     subs: List[int]
     last_task_time: float
-    ready: bool = True
     privileged: bool = False
-
-
-@dataclass
-class MetaQueues:
-    id: int
-    size: int
-    task: List[Task]
+    task: Task = None

@@ -5,11 +5,32 @@ from aiohttp.web import WebSocketResponse
 from time import time
 from models import Task, Client
 from distribution import distribute
+from utils import log
 
 
-async def lel():
-    await asyncio.sleep(1)
-    print('lel')
+def mock_distribute(app, client):
+    if len(app['queues'][1]) > 0:
+        task = app['queues'][1][0]
+        app['queues'][1] = app['queues'][1][1:]
+        send(app, client.uuid, task)
+
+
+def send(app, client_uuid: str, task: Task):
+    client: Client = app['clients'][client_uuid]
+    # TODO: add client validity checks
+
+    task.assignee = client.uuid
+    app['pending'][task.uuid] = task
+    client.task = task.uuid
+
+    async def helper(client: Client, Task: task):
+        try:
+            await client.ws.send_json({'payload': task.payload})
+        except BaseException as e:
+            # TODO: handle
+            pass
+
+    asyncio.get_running_loop().create_task(helper(client, task))
 
 
 async def generator_handle(request) -> WebSocketResponse:
@@ -25,10 +46,13 @@ async def generator_handle(request) -> WebSocketResponse:
             print(task)
 
             if task.id not in app['queues']:
-                app['queues'][id] = []
+                app['queues'][task.id] = []
 
-            app['queues'][id].append(task)
-            await distribute(app['clients'], app['queues'])
+            app['queues'][task.id].append(task)
+
+            log(app)
+
+            # to_send = distribute(app['clients'], app['queues'])
 
     return ws
 
@@ -39,25 +63,57 @@ async def client_handle(request) -> WebSocketResponse:
     app = request.app
 
     uuid = None
+    client = None
     async for msg in ws:
         msg: WSMessage
         if msg.type == WSMsgType.TEXT:
             data = msg.json()
+            print(f'TYPE: {data["type"]}')
+
             if data['type'] == 'register':
                 uuid = str(uuid1())
-                app['clients'][uuid] = Client(uuid=uuid, ws=ws, subs=data['subs'],
-                                              last_task_time=time(), privileged=data['privileged'])
+                client = Client(uuid=uuid, ws=ws, subs=data['subs'],
+                                last_task_time=time(), privileged=data['privileged'])
+                app['clients'][uuid] = client
+
+                # TODO: distribute
+                mock_distribute(app, client)
+
+                log(app)
+
             elif data['type'] == 'get_list':
-                pass  # TODO
+                if not client.privileged:
+                    assert False
+
+                pass
 
             elif data['type'] == 'get':
                 pass  # TODO
 
             elif data['type'] == 'ack':
-                pass  # TODO
+                task_uuid = client.task
+                del app['pending'][task_uuid]
+                client.task = None
+
+                #TODO: distribute
+                mock_distribute(app, client)
+
+                log(app)
 
             elif data['type'] == 'rej':
-                pass  # TODO
+                task_uuid = client.task
+                task = app['pending'][task_uuid]
+                del app['pending'][task_uuid]
+                app['queues'][task.id].insert(0, task)
+
+                client.task = None
+
+                log(app)
+
+                # TODO: distribute
+                mock_distribute(app, client)
+
+                log(app)
 
             elif data['type'] == 'disconnect':
                 pass  # TODO
