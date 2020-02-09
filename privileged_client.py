@@ -58,6 +58,14 @@ async def main():
                 elif data['type'] == 'task_list':
                     print('got task list')
                     tasks = data['tasks']
+                    if len(tasks) == 0:
+                        data = {
+                            'type': 'get_list',
+                            'query': q_id
+                        }
+                        await ws.send_json(data)
+                        print('task list requested again')
+
                     task = choice(tasks)
                     resp = {
                         'type': 'get',
