@@ -69,7 +69,7 @@ async def main():
                     print('got task list')
                     tasks = data['tasks']
                     if len(tasks) == 0:
-                        await asyncio.sleep()
+                        await asyncio.sleep(5)
                         data = {
                             'type': 'get_list',
                             'query': q_id
