@@ -18,38 +18,42 @@ POSSIBLE_SUBS = [[1], [2], [3], [1, 2], [2, 3], [1, 3], [1, 2, 3]]
 
 async def client(subs):
     session = aiohttp.ClientSession()
-    async with session.ws_connect(URL) as ws:
-        data = {
-            'type': 'register',
-            'subs': subs,
-            'privileged': False
-        }
-        await ws.send_json(data)
+    try:
+        async with session.ws_connect(URL) as ws:
+            data = {
+                'type': 'register',
+                'subs': subs,
+                'privileged': False
+            }
+            await ws.send_json(data)
 
-        print('registered')
+            print('registered')
 
-        handled = 0
+            handled = 0
 
-        async for msg in ws:
-            msg: WSMessage
-            if msg.type == WSMsgType.TEXT:
-                print('got task')
-                await asyncio.sleep(choice(times))
-                data = {
-                    'type': choice(res)
-                }
-                print('processed')
-                await ws.send_json(data)
-                print('sent')
+            async for msg in ws:
+                msg: WSMessage
+                if msg.type == WSMsgType.TEXT:
+                    print('got task')
+                    await asyncio.sleep(choice(times))
+                    data = {
+                        'type': choice(res)
+                    }
+                    print('processed')
+                    await ws.send_json(data)
+                    print('sent')
 
-                # handled += 1
-                # if handled >= LIMIT:
-                #     resp = {
-                #         'type': 'disconnect'
-                #     }
-                #     print('processed')
-                #     await ws.send_json(resp)
-                #     return
+                    # handled += 1
+                    # if handled >= LIMIT:
+                    #     resp = {
+                    #         'type': 'disconnect'
+                    #     }
+                    #     print('processed')
+                    #     await ws.send_json(resp)
+                    #     return
+    except BaseException as e:
+        print(e)
+        exit(0)
 
 
 async def main():
