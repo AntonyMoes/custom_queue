@@ -4,14 +4,22 @@ from aiohttp import WSMsgType, WSMessage
 from aiohttp.web import WebSocketResponse
 from time import time
 from models import Task, Client
-from distribution import distribute
+from distribution import distribute, distribute1
 from utils import log
+from pprint import pprint
 
 
 def mock_distribute(app, client):
     if len(app['queues'][1]) > 0:
         task = app['queues'][1].pop(0)
         send(app, client.uuid, task)
+
+
+def apply_distribution(app):
+    distribution = distribute1(app['clients'], app['queues'])
+    pprint(distribution)
+    for uuid, task in distribution:
+        send(app, uuid, task)
 
 
 TIMEOUT = 5
@@ -79,6 +87,7 @@ async def generator_handle(request) -> WebSocketResponse:
             log(app)
 
             # todo: add distribution
+            apply_distribution(app)
             # to_send = distribute(app['clients'], app['queues'])
 
     return ws
@@ -103,8 +112,8 @@ async def client_handle(request) -> WebSocketResponse:
                 app['clients'][uuid] = client
 
                 if not client.privileged:
-                    # TODO: distribute
-                    mock_distribute(app, client)
+                    apply_distribution(app)
+                    # mock_distribute(app, client)
 
                 log(app)
 
@@ -154,8 +163,8 @@ async def client_handle(request) -> WebSocketResponse:
                     client.task = None
 
                 if not client.privileged:
-                    # TODO: distribute
-                    mock_distribute(app, client)
+                    apply_distribution(app)
+                    # mock_distribute(app, client)
 
                 log(app)
 
@@ -172,8 +181,8 @@ async def client_handle(request) -> WebSocketResponse:
                 log(app)
 
                 if not client.privileged:
-                    # TODO: distribute
-                    mock_distribute(app, client)
+                    apply_distribution(app)
+                    # mock_distribute(app, client)
 
                 log(app)
 
