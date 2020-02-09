@@ -1,5 +1,5 @@
 from aiohttp import web
-from handlers import generator_handle, client_handle
+from handlers import generator_handle, client_handle, stat_handle
 
 
 def main():
@@ -8,6 +8,7 @@ def main():
     routes = [
         ('GET', '/generator', generator_handle, 'generator_handle'),
         ('GET', '/client', client_handle, 'client_handle'),
+        ('GET', '/stats', stat_handle, 'stat_handle')
     ]
 
     for method, route, handler, name in routes:
@@ -16,6 +17,10 @@ def main():
     app['clients'] = dict()
     app['pending'] = dict()
     app['queues'] = dict()
+    app['stats'] = {
+        'queues': dict(),
+        'clients': dict()
+    }
 
     web.run_app(app, host='0.0.0.0', port=8080)
 

@@ -21,3 +21,11 @@ class Client:
     last_task_time: float
     privileged: bool = False
     task: Task = None
+
+
+@dataclass
+class QueueStats:
+    tasks_processed: int = 0
+    sum_live_time: int = 0
+    sum_process_time: int = 0
+    sum_process_attempts: int = 0

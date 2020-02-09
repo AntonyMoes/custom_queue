@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  queue:
+    restart: always
+    build:
+      context: '.'
+      dockerfile: './Dockerfile'
+    ports:
+      - 8080:8080
+
+  generators:
+    environment:
+      HOST: 'queue'
+    build:
+      context: '.'
+      dockerfile: './Dockerfile.gens'
+    depends_on:
+      - queue
+
+  clients:
+    environment:
+      HOST: 'queue'
+    build:
+      context: '.'
+      dockerfile: './Dockerfile.clis'
+    depends_on:
+      - queue
+
+  privileged_clients:
+    environment:
+      HOST: 'queue'
+    build:
+      context: '.'
+      dockerfile: './Dockerfile.pclis'
+    depends_on:
+      - queue

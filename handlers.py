@@ -1,11 +1,11 @@
 from uuid import uuid1
 import asyncio
 from aiohttp import WSMsgType, WSMessage
-from aiohttp.web import WebSocketResponse
+from aiohttp.web import WebSocketResponse, json_response
 from time import time
-from models import Task, Client
+from models import Task, Client, QueueStats
 from distribution import distribute, distribute1
-from utils import log
+from utils import log, add_stats
 from pprint import pprint
 
 
@@ -32,6 +32,8 @@ async def timeout(app, task_uuid: str):
 
         # in case task was reassigned
         if time() - task.started_processing >= TIMEOUT - 0.1:
+            add_stats(app, task, successfull=False)
+
             task.started_processing = None
             del app['pending'][task_uuid]
             app['queues'][task.id].insert(0, task)
@@ -49,6 +51,7 @@ def send(app, client_uuid: str, task: Task):
     task.assignee = client.uuid
     app['pending'][task.uuid] = task
     client.task = task.uuid
+    task.started_processing = time()
 
     async def helper(client: Client, task: Task):
         try:
@@ -57,11 +60,12 @@ def send(app, client_uuid: str, task: Task):
                 'type': 'task',
                 'payload': task.payload
             })
-            task.started_processing = time()
+            print('sent')
             asyncio.get_running_loop().create_task(timeout(app, task.uuid))
 
         except BaseException as e:
             # TODO: handle
+            print('EXCEPTION', e)
             pass
 
     asyncio.get_running_loop().create_task(helper(client, task))
@@ -146,11 +150,6 @@ async def client_handle(request) -> WebSocketResponse:
                     task = tasks[0]
                     app['queues'][q_id] = list(filter(lambda t: t.uuid != task_uuid, app['queues'][q_id]))
 
-                    # todo: REFACTOR SEND
-                    # client.task = task.uuid
-                    # task.assignee = client.uuid
-                    # app['pending'][task.uuid] = task
-
                     send(app, client.uuid, task)
 
                 log(app)
@@ -159,8 +158,11 @@ async def client_handle(request) -> WebSocketResponse:
                 task_uuid = client.task
                 client.last_task_time = time()
                 if task_uuid is not None:
+                    task = app['pending'][task_uuid]
                     del app['pending'][task_uuid]
                     client.task = None
+
+                    add_stats(app, task, successfull=True)
 
                 if not client.privileged:
                     apply_distribution(app)
@@ -174,9 +176,13 @@ async def client_handle(request) -> WebSocketResponse:
                 if task_uuid is not None:
                     task = app['pending'][task_uuid]
                     del app['pending'][task_uuid]
-                    task.started_processing = None
                     app['queues'][task.id].insert(0, task)
                     client.task = None
+                    task.assignee = None
+
+                    add_stats(app, task, successfull=False)
+
+                    task.started_processing = None
 
                 log(app)
 
@@ -191,6 +197,9 @@ async def client_handle(request) -> WebSocketResponse:
                     pending: Task = app['pending'][client.task]
                     del app['pending'][client.task]
                     pending.assignee = None
+
+                    add_stats(app, pending, successfull=False)
+
                     pending.started_processing = None
                     app['queues'][pending.id].insert(0, pending)
 
@@ -202,3 +211,14 @@ async def client_handle(request) -> WebSocketResponse:
                 assert False
 
     return ws
+
+
+async def stat_handle(request):
+    app = request.app
+
+    stats = {
+        'queues': [s.__dict__ for s in app['stats']['queues'].values()],
+        'num_clients': len(app['clients']),
+        'num_working_clients': len([c for c in app['clients'].values() if c.task is not None])
+    }
+    return json_response(stats)
