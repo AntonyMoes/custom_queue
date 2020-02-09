@@ -11,6 +11,10 @@ def main():
     for method, route, handler, name in routes:
         app.router.add_route(method, route, handler, name=name)
 
+    app['clients'] = dict()
+    app['senior_clients'] = dict()
+    app['pending'] = dict()
+
     web.run_app(app, host='0.0.0.0', port=8080)
 
 
