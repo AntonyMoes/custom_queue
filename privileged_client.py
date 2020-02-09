@@ -39,6 +39,15 @@ async def main():
             if msg.type == WSMsgType.TEXT:
                 data = msg.json()
                 print(data)
+                if data['status'] == 'err':
+                    await asyncio.sleep(5)
+                    data = {
+                        'type': 'get_list',
+                        'query': q_id
+                    }
+                    await ws.send_json(data)
+                    print('task list requested again')
+
                 if data['type'] == 'task':
                     print('got task')
                     await asyncio.sleep(choice(times))
@@ -59,6 +68,7 @@ async def main():
                     print('got task list')
                     tasks = data['tasks']
                     if len(tasks) == 0:
+                        await asyncio.sleep()
                         data = {
                             'type': 'get_list',
                             'query': q_id

@@ -1,4 +1,5 @@
 from aiohttp import web
+import aiohttp_cors
 from handlers import generator_handle, client_handle, stat_handle
 
 
@@ -13,6 +14,19 @@ def main():
 
     for method, route, handler, name in routes:
         app.router.add_route(method, route, handler, name=name)
+
+    # Configure default CORS settings.
+    cors = aiohttp_cors.setup(app, defaults={
+        "*": aiohttp_cors.ResourceOptions(
+            allow_credentials=True,
+            expose_headers="*",
+            allow_headers="*",
+        )
+    })
+
+    # Configure CORS on all routes.
+    for route in list(app.router.routes()):
+        cors.add(route)
 
     app['clients'] = dict()
     app['pending'] = dict()
